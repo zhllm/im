@@ -8,8 +8,8 @@ type Trainer struct {
 }
 
 type Result struct {
-	StartTime int64
-	Msg       string
-	Content   interface{}
-	From      string
+	StartTime int64       `bson:"startTime"`
+	Msg       string      `bson:"msg"`
+	Content   interface{} `bson:"content"`
+	From      string      `bson:"from"`
 }

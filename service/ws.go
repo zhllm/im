@@ -143,10 +143,37 @@ func (client *Client) Read() {
 			// 获取历史消息
 			timeT, err := strconv.Atoi(sendMsg.Content)
 			if err != nil {
-				timeT = 999999
+				timeT = 99999
 			}
 
-			result, _ := FindMany(conf.MongoDBName, client.SendId, client.ID, int64(timeT), 10)
+			results, _ := FindMany(conf.MongoDBName, client.SendId, client.ID, int64(timeT), 10000)
+
+			if len(results) > 10 {
+				// results = results[:10]
+			} else if len(results) == 0 {
+				replyMsg := ReplyMsg{
+					Code:    e.WebsocketEnd,
+					Content: "到底了",
+				}
+				msg, _ := json.Marshal(replyMsg)
+				_ = client.Socket.WriteMessage(websocket.TextMessage, msg)
+				continue
+			}
+			for _, result := range results {
+				replyMsg := ReplyMsg{
+					From:    result.From,
+					Content: result.Msg,
+				}
+				msg, _ := json.Marshal(replyMsg)
+				_ = client.Socket.WriteMessage(websocket.TextMessage, msg)
+			}
+
+			replyMsg := ReplyMsg{
+				From:    "system",
+				Content: strconv.Itoa(len(results)),
+			}
+			msg, _ := json.Marshal(replyMsg)
+			_ = client.Socket.WriteMessage(websocket.TextMessage, msg)
 		}
 	}
 }
